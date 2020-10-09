@@ -11,14 +11,14 @@ params:
   snapshot_mode:
     input: select
     choices: ["none", "save", "load"]
-    value: "none"
+    value: "save"
   # file name (without extension) of the snapshot to save or load. This field must be provided in 'load' mode.
   # in save mode, this field may be provided or left blank. If provided, the snapshot will be saved
   # using the given name and overwrite it if it already exists. If blank, the snapshot will be saved
   # using a timestamp as the name.
-  snapshot_name: ""
+  snapshot_name: "quotes"
   # name of the directory in which snapshots are located.
-  snapshot_path: "/data/COVID-Twitter/analysis/snapshots"
+  snapshot_path: "/home/shweht/DARL-2020/COVID-Twitter/analysis/snapshots/"
 ---
 
 ```{r setup, include=FALSE}
@@ -70,8 +70,8 @@ if (!snapshot_loaded) {
   elasticsearch_index <- "coronavirus-data-masks"
   elasticsearch_host <-  "lp01.idea.rpi.edu"
   elasticsearch_path <- "elasticsearch"
-  elasticsearch_port <- 9200
-  elasticsearch_schema <- "http"
+  elasticsearch_port <- 443
+  elasticsearch_schema <- "https"
   
   embedder_url <- "http://localhost:8008/embed/use_large/"
   summarizer_url <- "http://idea-node-05:8080/batchsummarize"
@@ -124,7 +124,7 @@ if (!snapshot_loaded) {
   random_sample <- TRUE
   
   # number of results to return (to return all results, set to NA)
-  resultsize <- 100000
+  resultsize <- 10000
   
   # minimum number of results to return. This should be set according to the needs of the analysis (i.e. enough samples for statistical significance)
   min_results <- 500
@@ -254,7 +254,7 @@ perform_divisiveness_linreg <- FALSE
 # Get the tweets from Elasticsearch using the search parameters defined above
 ###############################################################################
 if (!snapshot_loaded) {
-  resultfields <- '"id_str", "created_at", "user.screen_name", "user.verified", "user.location", "place.full_name", "place.country", "text", "full_text", "extended_tweet.full_text", "embedding.use_large.primary"'
+  resultfields <- '"id_str", "created_at", "user.screen_name", "user.verified", "user.location", "place.full_name", "place.country", "text", "full_text", "extended_tweet.full_text", "embedding.use_large.primary", "quoted_status.text"'
   
   results <- do_search(indexname=elasticsearch_index, 
                        rangestart=rangestart,
@@ -279,7 +279,7 @@ if (!snapshot_loaded) {
   
   # this dataframe must contains the tweet text and other metadata.
   # validate that all necessary fields exist in the queried index and were returned:
-  required_fields <- c("full_text", "id_str", "created_at", "user_screen_name", "user_verified", "user_location", "place.country", "place.full_name", "sentiment")
+  required_fields <- c("full_text", "id_str", "created_at", "user_screen_name", "user_verified", "user_location", "place.country", "place.full_name", "sentiment", "quoted_status.text")
   validate_results(results$df, min_results, required_fields)
   
   tweet.vectors.df <- results$df[,required_fields]
@@ -758,3 +758,4 @@ taglist
 
 htmltools::HTML(load_tweet_viewer())
 ```
+
